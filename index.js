@@ -8,19 +8,52 @@ import chatRoutes from "./routes/chat.route.js";
 import cors from "cors";
 
 dotenv.config();
+
+console.log("Environment variables loaded:");
+console.log("PORT:", process.env.PORT);
+console.log("FRONTEND_URL:", process.env.FRONTEND_URL);
+console.log("MongoDB connected:", !!process.env.MONGO_URI);
+console.log("Gemini key exists:", !!process.env.NEW_GEMINI_KEY);
 const app = express();
 const port = process.env.PORT || 4001;
 const MONGO_URL = process.env.MONGO_URI;
 
+
+
 // Middleware
 app.use(express.json());
 app.use(cookieParser());
+// index.js - Update CORS section
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL || "http://localhost:5173",
+    origin: function (origin, callback) {
+      // Allow requests with no origin (like mobile apps or curl requests)
+      if (!origin) return callback(null, true);
+      
+      const allowedOrigins = [
+        'http://localhost:5173',  // Vite default
+        'http://localhost:3000',  // Create React App default
+        'http://localhost:4000'   // Alternative
+      ];
+      
+      // Also check from environment variable
+      const envFrontendUrl = process.env.FRONTEND_URL;
+      if (envFrontendUrl && !allowedOrigins.includes(envFrontendUrl)) {
+        allowedOrigins.push(envFrontendUrl);
+      }
+      
+      if (allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        console.log('CORS blocked origin:', origin);
+        console.log('Allowed origins:', allowedOrigins);
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
     credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    exposedHeaders: ['Set-Cookie']
   })
 );
 
