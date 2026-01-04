@@ -52,7 +52,7 @@ export const sendPrompt = async (req, res) => {
     });
 
   } catch (error) {
-    console.error("Unexpected error in sendPrompt:", error); // ← logs full error
+    console.error("Unexpected error in sendPrompt:", error); 
     return res.status(500).json({
       error: "Something went wrong while generating the AI response",
       details: process.env.NODE_ENV === 'development' ? error.message : undefined

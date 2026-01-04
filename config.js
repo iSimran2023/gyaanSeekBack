@@ -1,8 +1,13 @@
-import dotenv from "dotenv";
-dotenv.config();
+// import dotenv from "dotenv";
+// dotenv.config();
 
-const JWT_USER_PASSWORD = process.env.JWT_PASSWORD;
+// const JWT_USER_PASSWORD = process.env.JWT_PASSWORD;
 
+// export default {
+//   JWT_USER_PASSWORD,
+// };
+
+// config.js — Vercel-compatible (no dotenv)
 export default {
-  JWT_USER_PASSWORD,
+  JWT_USER_PASSWORD: process.env.JWT_PASSWORD || 'gyaanSeek7'
 };

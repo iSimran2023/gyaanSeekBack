@@ -19,7 +19,7 @@ export const getUserChats = async (req, res) => {
       });
     }
     
-    // ✅ Group by chatId (stable, unique)
+    // Group by chatId (stable, unique)
     const chatsMap = new Map();
     
     prompts.forEach(prompt => {
@@ -92,7 +92,7 @@ export const getChatMessages = async (req, res) => {
     
     const prompts = await Prompt.find({
       userId,
-      chatId // ← exact match (fast, no date parsing)
+      chatId 
     }).sort({ createdAt: 1 });
     
     console.log("Found prompts in chat:", prompts.length);
@@ -136,7 +136,6 @@ export const getChatMessages = async (req, res) => {
   }
 };
 
-// Update chat title (still frontend-managed via localStorage)
 export const updateChatTitle = async (req, res) => {
   try {
     const { title } = req.body;
@@ -167,7 +166,6 @@ export const updateChatTitle = async (req, res) => {
   }
 };
 
-// Delete chat — by chatId
 export const deleteChat = async (req, res) => {
   try {
     const userId = req.userId;
@@ -175,7 +173,7 @@ export const deleteChat = async (req, res) => {
     
     const result = await Prompt.deleteMany({
       userId,
-      chatId // ← exact, safe delete
+      chatId 
     });
     
     console.log("Deleted prompts:", result.deletedCount);
