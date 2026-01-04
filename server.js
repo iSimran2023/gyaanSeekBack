@@ -1,41 +1,30 @@
 import express from "express";
-import dotenv from "dotenv";
 import mongoose from "mongoose";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 
-// Import routes
+// Routes
 import userRoutes from "./routes/user.route.js";
 import promptRoutes from "./routes/prompt.route.js";
 import chatRoutes from "./routes/chat.route.js";
 
-dotenv.config();
-
-mongoose.set('strictQuery', false);
-mongoose.set('autoIndex', true);
-
 const app = express();
 const port = process.env.PORT || 4002;
-const MONGO_URL = process.env.MONGO_URI;
+const MONGO_URI = process.env.MONGO_URI; 
 
 // Middleware
 app.use(express.json());
 app.use(cookieParser());
 
-// CORS
 app.use(cors({
-  origin: function (origin, callback) {
+  origin: (origin, callback) => {
     if (!origin) return callback(null, true);
-    const allowedOrigins = [
+    const allowed = [
       'http://localhost:5173',
-      'http://localhost:3000',
-      'http://localhost:4000'
+      /\.vercel\.app$/,
+      'https://gyaanseek-front.vercel.app'
     ];
-    const envFrontendUrl = process.env.FRONTEND_URL;
-    if (envFrontendUrl && !allowedOrigins.includes(envFrontendUrl)) {
-      allowedOrigins.push(envFrontendUrl);
-    }
-    callback(null, allowedOrigins.includes(origin));
+    callback(null, allowed.some(o => typeof o === 'string' ? origin === o : o.test(origin)));
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
@@ -43,10 +32,14 @@ app.use(cors({
   exposedHeaders: ['Set-Cookie']
 }));
 
-// DB
-mongoose.connect(MONGO_URL)
-  .then(() => console.log("Connected to MongoDB"))
-  .catch(err => console.error("MongoDB Error:", err));
+// DB — only if MONGO_URI is set (Vercel env)
+if (MONGO_URI) {
+  mongoose.connect(MONGO_URI)
+    .then(() => console.log("Connected to MongoDB"))
+    .catch(err => console.error("MongoDB Error:", err.message));
+} else {
+  console.warn("⚠️ MONGO_URI not set — DB disabled");
+}
 
 // Routes
 app.use("/api/v1/user", userRoutes);
@@ -55,10 +48,11 @@ app.use("/api/v1/chat", chatRoutes);
 
 // Health check
 app.get("/", (req, res) => {
-  res.json({ 
-    message: "API is running",
+  res.json({
+    status: "OK",
+    db: mongoose.connection.readyState === 1 ? "connected" : "disconnected",
     env: {
-      MONGO_URI: !!process.env.MONGO_URI,
+      MONGO_URI: !!MONGO_URI,
       JWT_PASSWORD: !!process.env.JWT_PASSWORD,
       NEW_GEMINI_KEY: !!process.env.NEW_GEMINI_KEY
     }
@@ -72,18 +66,9 @@ app.use((req, res) => {
 
 // Error handler
 app.use((err, req, res, next) => {
-  console.error("Server Error:", err.stack);
+  console.error("🔥 Server Error:", err.stack);
   res.status(500).json({ error: "Internal server error" });
 });
 
-// FINAL EXPORT — ESM + dynamic import (Vercel-compatible)
-if (typeof process !== 'undefined' && process.env.VERCEL) {
-  // Vercel serverless environment
-  const { createServer } = await import('@vercel/node');
-  export default createServer(app);
-} else {
-  // Local development
-  app.listen(port, () => {
-    console.log(`🚀 Server running on http://localhost:${port}`);
-  });
-}
+// EXPORT FOR VERCEL (no require, no conditional export)
+export default app;
