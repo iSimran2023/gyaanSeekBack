@@ -6,19 +6,19 @@
   "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "nodemon index.js", 
-    "start": "node index.js"    
+    "start": "nodemon index.js"
   },
   "keywords": [
-    "aitool"
-    ],
+    "aitool",
+    "clone"
+  ],
   "author": "simran",
   "license": "ISC",
   "dependencies": {
     "@google/genai": "^1.30.0",
     "@google/generative-ai": "^0.24.1",
+    "@vercel/node": "^5.5.16",
     "bcrypt": "^6.0.0",
-    "cloudinary": "^1.21.0",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
@@ -26,12 +26,7 @@
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^9.0.0",
     "nanoid": "^5.1.6",
+    "nodemon": "^3.1.11",
     "openai": "^6.9.1"
-  },
-  "devDependencies": {
-    "nodemon": "^3.1.11"  
-  },
-  "engines": {
-    "node": ">=18.0.0"   
   }
 }
