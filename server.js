@@ -30,11 +30,21 @@ console.log("🔍 MONGO_URI exists:", !!MONGO_URI);
 console.log("🔍 MONGO_URI length:", MONGO_URI?.length);
 
 if (MONGO_URI) {
-  mongoose.connect(MONGO_URI)
-    .then(() => console.log("✅ MongoDB connected"))
-    .catch(err => console.error("❌ DB connection failed:", err.message));
+  console.log(" Attempting MongoDB connection...");
+  mongoose.connect(MONGO_URI, {
+    serverSelectionTimeoutMS: 5000, // Fail fast (5 seconds)
+    socketTimeoutMS: 45000,
+  })
+  .then(() => {
+    console.log("✅ MongoDB connected successfully!");
+  })
+  .catch(err => {
+    console.error(" MongoDB connection FAILED:", err.message);
+    console.error(" Atlas tip: Is 0.0.0.0/0 whitelisted in Network Access?");
+    console.error(" URI format: mongodb+srv://<user>:<pass>@cluster...");
+  });
 } else {
-  console.warn("⚠️ MONGO_URI is missing — check Vercel env vars");
+  console.warn(" MONGO_URI is missing — check Vercel env vars");
 }
 
 // Routes
@@ -44,9 +54,11 @@ app.use("/api/v1/chat", chatRoutes);
 
 // Health check
 app.get("/", (req, res) => {
+  const dbState = mongoose.connection.readyState;
+  const states = ['disconnected', 'connected', 'connecting', 'disconnecting'];
   res.json({
     status: "OK",
-    db: mongoose.connection.readyState === 1 ? "connected" : "disconnected",
+    db: states[dbState],
     env: {
       MONGO_URI: !!MONGO_URI,
       JWT_PASSWORD: !!process.env.JWT_PASSWORD,
