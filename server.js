@@ -4,7 +4,7 @@ import mongoose from "mongoose";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 
-// Import routes 
+// Import routes
 import userRoutes from "./routes/user.route.js";
 import promptRoutes from "./routes/prompt.route.js";
 import chatRoutes from "./routes/chat.route.js";
@@ -55,7 +55,14 @@ app.use("/api/v1/chat", chatRoutes);
 
 // Health check
 app.get("/", (req, res) => {
-  res.json({ message: "API is running" });
+  res.json({ 
+    message: "API is running",
+    env: {
+      MONGO_URI: !!process.env.MONGO_URI,
+      JWT_PASSWORD: !!process.env.JWT_PASSWORD,
+      NEW_GEMINI_KEY: !!process.env.NEW_GEMINI_KEY
+    }
+  });
 });
 
 // 404
@@ -69,12 +76,13 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: "Internal server error" });
 });
 
-// FINAL FIX: Export for Vercel, listen for local
-if (process.env.VERCEL) {
-  // Vercel uses `require` for dynamic imports in conditionals
-  const { createServer } = require('@vercel/node');
-  module.exports = createServer(app);
+// FINAL EXPORT — ESM + dynamic import (Vercel-compatible)
+if (typeof process !== 'undefined' && process.env.VERCEL) {
+  // Vercel serverless environment
+  const { createServer } = await import('@vercel/node');
+  export default createServer(app);
 } else {
+  // Local development
   app.listen(port, () => {
     console.log(`🚀 Server running on http://localhost:${port}`);
   });
