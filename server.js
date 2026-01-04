@@ -26,12 +26,15 @@ app.use(cors({
 }));
 
 // DB — only if MONGO_URI is set
+console.log("🔍 MONGO_URI exists:", !!MONGO_URI);
+console.log("🔍 MONGO_URI length:", MONGO_URI?.length);
+
 if (MONGO_URI) {
   mongoose.connect(MONGO_URI)
-    .then(() => console.log(" MongoDB connected"))
-    .catch(err => console.error(" MongoDB Error:", err.message));
+    .then(() => console.log("✅ MongoDB connected"))
+    .catch(err => console.error("❌ DB connection failed:", err.message));
 } else {
-  console.warn("⚠️ MONGO_URI not set — DB disabled");
+  console.warn("⚠️ MONGO_URI is missing — check Vercel env vars");
 }
 
 // Routes
