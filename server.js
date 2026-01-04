@@ -53,18 +53,33 @@ app.use("/api/v1/aiTool", promptRoutes);
 app.use("/api/v1/chat", chatRoutes);
 
 // Health check
-app.get("/", (req, res) => {
-  const dbState = mongoose.connection.readyState;
-  const states = ['disconnected', 'connected', 'connecting', 'disconnecting'];
-  res.json({
-    status: "OK",
-    db: states[dbState],
-    env: {
-      MONGO_URI: !!MONGO_URI,
-      JWT_PASSWORD: !!process.env.JWT_PASSWORD,
-      NEW_GEMINI_KEY: !!process.env.NEW_GEMINI_KEY
+app.get("/", async (req, res) => {
+  try {
+    // Force DB connection check
+    if (mongoose.connection.readyState === 0) {
+      console.log("🔍 DB not connected — attempting connect...");
+      await mongoose.connect(process.env.MONGO_URI, {
+        serverSelectionTimeoutMS: 5000
+      });
+      console.log(" DB connected on-demand");
     }
-  });
+    
+    const dbState = mongoose.connection.readyState;
+    const states = ['disconnected', 'connected', 'connecting', 'disconnecting'];
+    
+    res.json({
+      status: "OK",
+      db: states[dbState],
+      env: {
+        MONGO_URI: !!process.env.MONGO_URI,
+        JWT_PASSWORD: !!process.env.JWT_PASSWORD,
+        NEW_GEMINI_KEY: !!process.env.NEW_GEMINI_KEY
+      }
+    });
+  } catch (err) {
+    console.error(" DB connection error in health check:", err.message);
+    res.status(500).json({ error: "DB connection failed", details: err.message });
+  }
 });
 
 // 404
@@ -74,7 +89,7 @@ app.use((req, res) => {
 
 // Error handler
 app.use((err, req, res, next) => {
-  console.error("🔥 Server Error:", err.stack);
+  console.error(" Server Error:", err.stack);
   res.status(500).json({ error: "Internal server error" });
 });
 
